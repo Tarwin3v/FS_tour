@@ -1,0 +1,23 @@
+extends base
+
+block content
+
+
+
+  main.main
+    .login-form
+      form.form.form--signup
+        .form__group
+          label.form__label(for='name') Name
+          input#text.form__input(type='text', placeholder='Your name', required)
+        .form__group
+          label.form__label(for='email') Email Address
+          input#email.form__input(type='email', placeholder='your@example.com', required)
+        .form__group.ma-bt-md
+          label.form__label(for='password') Password
+          input#password.form__input(type='password', placeholder='••••••••', required, minlength='8')
+        .form__group.ma-bt-md
+          label.form__label(for='password') Password Confirm
+          input#passwordC.form__input(type='password', placeholder='••••••••', required, minlength='8')
+        .form__group
+          button.btn.btn--green Sign Up
