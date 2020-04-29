@@ -4,6 +4,10 @@ const Booking = require('./../models/bookingsModel');
 
 const catchAsyncErr = require('./../utils/catchAsyncErr');
 
+// =============================================================================
+//                         @a CHECKOUT SESSION
+// =============================================================================
+
 exports.getCheckoutSession = catchAsyncErr(async (req, res, next) => {
   //@d query tour with tourId
   const tour = await Tour.findById(req.params.tourId);
@@ -34,6 +38,10 @@ exports.getCheckoutSession = catchAsyncErr(async (req, res, next) => {
     session: session
   });
 });
+
+// =============================================================================
+//                         @a CREATE BOOKING CHECKOUT
+// =============================================================================
 
 exports.createBookingCheckout = catchAsyncErr(async (req, res, next) => {
   //@q deconstruct our data from req.query
