@@ -8,43 +8,50 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
 
-const AppError = require('./utils/appError');
-const gobalErrorHandler = require('./controllers/errorsCtrl');
+const AppError = require('./utils/appError'); // custom class error
+const gobalErrorHandler = require('./controllers/errorsCtrl'); // handle DB errors
+
 const toursRouter = require('./routes/toursRoutes');
 const usersRouter = require('./routes/usersRoutes');
 const reviewsRouter = require('./routes/reviewsRoutes');
 const bookingsRouter = require('./routes/bookingsRoutes');
-
 const viewsRouter = require('./routes/viewsRoutes');
 
+// ======================================================================
+//@a INITIATE OUR EXPRESS INSTANCE // https://expressjs.com/fr/starter/installing.html
+// ======================================================================
+
 const app = express();
+
+// ======================================================================
+//@a HTML ENGINE SETTING // https://devhints.io/pug
+// ======================================================================
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
-// =============================================================================
-// @MIDDLEWARES
-// =============================================================================
 console.log('========================');
 console.log(`NODE_ENV||${process.env.NODE_ENV}🖥️`);
 console.log('========================');
 
-// serving static files
+// ======================================================================
+//@a SERVE STATIC ASSETS // https://expressjs.com/fr/starter/static-files.html
+// ======================================================================
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// security http headers
-
+// ======================================================================
+//@a SET SECURE HTTP HEADERS // https://www.npmjs.com/package/helmet
+// ======================================================================
 app.use(helmet());
-
-// development logging
-
+// detailed req logs during development
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// limit request from some API
-
+// ======================================================================
+//@a RATE LIMITER //https://www.npmjs.com/package/express-rate-limit
+// ======================================================================
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
@@ -52,20 +59,33 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// body parser, reading data from body into req.body
+// ======================================================================
+//@a BODY PARSER // https://stackoverflow.com/questions/47232187/express-json-vs-bodyparser-json/47232318
+// ======================================================================
 
 app.use(express.json({ limit: '10kb' }));
+
+// ======================================================================
+//@a COOKIE PARSER // https://github.com/expressjs/cookie-parser
+// ======================================================================
+
 app.use(cookieParser());
 
-//  data sanatization against NoSQL query injection(remove $)
+// ======================================================================
+//@a NoSQL DATA SANATIZATION // https://www.npmjs.com/package/express-mongo-sanitize // REMOVE($)
+// ======================================================================
 
 app.use(mongoSanitize());
 
-// data sanatization against XSS (cross site scripting attack)(clean any user input from html malicious code)
+// ======================================================================
+//@a DATA SANATIZATION AGAINST XSS  // https://www.npmjs.com/package/xss-clean // CLEAN ANY USER INPUT FROM HTML MALICIOUS CODE
+// ======================================================================
 
 app.use(xss());
 
-// prevent parameters pollution
+// ======================================================================
+//@a PARAMETERS POLLUTION // https://www.npmjs.com/package/hpp
+// ======================================================================
 
 app.use(
   hpp({
@@ -90,7 +110,7 @@ app.use((req, res, next) => {
 });
 
 // =============================================================================
-// @m ROUTES https://expressjs.com/fr/guide/routing.html
+// @o ROUTES https://expressjs.com/fr/guide/routing.html
 // =============================================================================
 app.use('/', viewsRouter);
 app.use('/api/v1/tours', toursRouter);

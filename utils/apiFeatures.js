@@ -1,40 +1,39 @@
+// ======================================================================
+//@a FEATURES CLASS HANDLE SORT / FIELDS && PAGINATE QUERIES // https://www.moesif.com/blog/technical/api-design/REST-API-Design-Filtering-Sorting-and-Pagination/
+// ======================================================================
+
 class APIFeatures {
+  // OUR CLASS NEED THE QUERY OBJECT && THE QUERY STRING OBJECT { sort: 'price,-ratingsAverage' }
   constructor(query, queryString) {
-    this.query = query;
-    this.queryString = queryString;
+    this.query = query; // THE FINAL QUERY THAT WE WILL USE TO REQ OUR DB
+    this.queryString = queryString; // INITIAL REQ.QUERY THAT WE WILL MUTATE WITH OUR DIFFERENT METHODS
   }
 
   filter() {
-    const queryObj = { ...this.queryString }; // on créé une copie de l'objet que l'on veut modifier
-    console.log(this.query); // enorme objet
-    console.log(this.queryString); // /?sort= -date,price  ====> queryString >>>> {sort:'-date, price}
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach(el => delete queryObj[el]); // on boucle autour d'une liste d'exclus
+    const queryObj = { ...this.queryString }; // HARD COPY OUR QUERY STRING OBJECT(REQ.QUERY FROM EXPRESS) { sort: 'price,-ratingsAverage' }
+    const excludedFields = ['page', 'sort', 'limit', 'fields']; // WE CREATE AN ARRAY WITH THE EXCLUDED PARAMETERS WE DONT WANT TO MAKE DB REQUEST WITH IT
+    excludedFields.forEach(el => delete queryObj[el]); // FILTER OUT OUR EXCLUDED FIELDS FROM OUR QUERY OBJ
 
-    let queryStr = JSON.stringify(queryObj); // on transforme l'objet en string pour pouvoir utiliser une mthd replace sur lui
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`); // on modifie les requetes API pour qu'elles correspondent à une requete Mongodb native
-
-    this.query = this.query.find(JSON.parse(queryStr)); // on retransforme le string en objet pour pouvoir l'utiliser en tant qu'argument de find()
-
-    return this; // on retourne this pour pouvoir enchainer l'utilisation des fonctions en instance
+    let queryStr = JSON.stringify(queryObj); // MUTATE OUR QUERY STRING  TYPE FROM OBJ TO STRING TO USE REPLACE ON IT
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`); // WE ADD THE $ SIGN BEFORE OUR QUERY OPERATOR TO VALIDATE IT AS NATIVE MONGODB REQ {DURATION : {GTE: '5}} >>> {DURATION : {$GTE:'5'}}
+    this.query = this.query.find(JSON.parse(queryStr)); // MUTATE OUR STRING TYPE TO OBJECT TO BE USED IN OUR REQ TO DATABASE
+    return this; // RETURN THE OBJECT INSTANCE TO ALLOW OUR NEXT FUNCTION TO MUTATE OUR QUERY ASWELL
   }
 
   sort() {
     if (this.queryString.sort) {
-      // s'il y' a presence de sort dans la requete API alors ...
-      console.log(this.queryString.sort);
-      const sortBy = this.queryString.sort.split(',').join(' '); // on reformule le contenu de queryString.sort pour qu'il soit utilisé en tant qu'argument pour utiliser la methode sort() sur la requete HTTP
+      const sortBy = this.queryString.sort.split(',').join(' '); // WE MUTATE OUR QUERY STRING FOR THE MONGOOSE SYNTAX FROM {SORT: 'PRICE,CREATEDAT'} TO ('PRICE CREATEDAT') SYNTAX USABLE FOR MONGOOSE QUERY
       this.query = this.query.sort(sortBy);
     } else {
-      this.query = this.query.sort('-createdAt -ratingsAverage'); // on veut que les documents soient classés par date de creation ainsi que notation par default
+      this.query = this.query.sort('-createdAt -ratingsAverage'); // IMPLANT DEFAULT SORTING BY CREATED AT FIELD & RATING
     }
-    return this;
+    return this; // RETURN THE OBJECT INSTANCE AGAIN
   }
 
+  // LIMITFIELDS FLOW IS EXACTLY THE SAME AS SORT
   limitFields() {
     if (this.queryString.fields) {
-      // si presence de fields dans l'objet queryString
-      const fields = this.queryString.fields.split(',').join(' '); // meme schema que pour sort
+      const fields = this.queryString.fields.split(',').join(' ');
       this.query = this.query.select(fields);
     } else {
       this.query = this.query.select('-__v');
@@ -43,9 +42,9 @@ class APIFeatures {
   }
 
   paginate() {
-    const page = this.queryString.page * 1 || 1; // si presence de page dans la requete alors conversion de la donnée page de string à number et s'il n'y a pas de pages alors 1 comme valeure par defaut
-    const limit = this.queryString.limit * 1 || 100; // meme schema mais pour limite
-    const skip = (page - 1) * limit; // petit calcul permettant d'utiliser la variable en argument de la methode skip() qui fait exactement ce qu'elle semble faire
+    const page = this.queryString.page * 1 || 1; // CONVERT STRING TO INT // DEFAULT OF 1
+    const limit = this.queryString.limit * 1 || 100; // CONVERT STRING TO INT // DEFAULT OF 100
+    const skip = (page - 1) * limit;
 
     this.query = this.query.skip(skip).limit(limit);
 

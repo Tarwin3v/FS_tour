@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer'); //https://github.com/nodemailer/nodemailer
+const nodemailer = require('nodemailer');
 const pug = require('pug');
 const htmlToText = require('html-to-text');
 
@@ -7,9 +7,10 @@ module.exports = class Email {
     this.to = user.email;
     this.firstName = user.name.split('')[0];
     this.url = url;
-    this.from = `Amaos <${process.env.EMAIL_FROM}`;
+    this.from = `Natours <${process.env.EMAIL_FROM}`;
   }
 
+  // USE SENDGRID IN PRODUCTION
   buildTransport() {
     if (process.env.NODE_ENV === 'production') {
       return nodemailer.createTransport({
@@ -31,13 +32,13 @@ module.exports = class Email {
   }
 
   async send(template, subject) {
-    //TODO render html based email on a pug template
+    //RENDER HTML BASED EMAIL ON A PUG TEMPLATE
     const html = pug.renderFile(`${__dirname}/../views/email/${template}.pug`, {
       firstName: this.firstName,
       url: this.url,
       subject
     });
-    //TODO define the email options
+    //DEFINE EMAIL OPTIONS
     const mailOptions = {
       from: this.from,
       to: this.to,
@@ -45,12 +46,12 @@ module.exports = class Email {
       html: html,
       text: htmlToText.fromString(html)
     };
-    //TODO create transport end send email
+    //CREATE TRANSPORT AND SEND EMAIL
     await this.buildTransport().sendMail(mailOptions);
   }
 
   async sendWelcome() {
-    await this.send('welcome', 'Welcome to the AMAOS family');
+    await this.send('welcome', 'Welcome to the Natours family');
   }
 
   async sendPasswordReset() {
