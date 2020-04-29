@@ -116,16 +116,25 @@ const tourSchema = new mongoose.Schema(
 tourSchema.index({ price: 1 });
 tourSchema.index({ ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+
+//@q https://docs.mongodb.com/manual/core/2dsphere/
 tourSchema.index({ startLocation: '2dsphere' });
+
+//@q we create a virtual property 'durationWeeks'
 
 tourSchema.virtual('durationWeeks').get(function() {
   return parseFloat(this.duration / 7).toFixed(1);
 });
 
+//@q virtual populate
+//@q 'review' == name of the virtual property
+//@q ref: give the reference of the model needed
+//@q localField && foreignField point to the same  Id but with different names to connect our 2 models
+
 tourSchema.virtual('reviews', {
   ref: 'Review',
-  foreignField: 'tour',
-  localField: '_id'
+  localField: '_id',
+  foreignField: 'tour'
 });
 
 tourSchema.pre('save', function(next) {
