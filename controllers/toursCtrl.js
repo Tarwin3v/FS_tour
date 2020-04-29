@@ -5,8 +5,14 @@ const catchAsyncErr = require('./../utils/catchAsyncErr');
 const AppError = require('./../utils/appError');
 const factory = require('./handlerFactory.js');
 
+// =============================================================================
+//                         @a MULTER / SHARP
+// =============================================================================
+
+//@q The memory storage engine stores the files in memory as Buffer objects
 const multerStorage = multer.memoryStorage();
 
+//@q Function to control which files should be uploaded and which should be skipped
 const multerFilter = (req, file, callback) => {
   if (file.mimetype.startsWith('image')) {
     callback(null, true);
@@ -23,6 +29,7 @@ const upload = multer({
   fileFilter: multerFilter
 });
 
+//@q Accept a mix of files, specified by fields. An object with arrays of files will be stored in req.files
 exports.uploadTourImages = upload.fields([
   { name: 'imageCover', maxCount: 1 },
   { name: 'images', maxCount: 3 }
@@ -31,34 +38,44 @@ exports.uploadTourImages = upload.fields([
 exports.resizeTourImages = catchAsyncErr(async (req, res, next) => {
   if (!req.files.imageCover || !req.files.images) return next();
 
+  //@q reassign uniq name to each image
   req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
 
+  //@q resize image && mutate it to jpeg format && finally send it to public/img/tours folder
   await sharp(req.files.imageCover[0].buffer)
     .resize(2000, 1333)
     .toFormat('jpeg')
     .jpeg({ quality: 90 })
     .toFile(`public/img/tours/${req.body.imageCover}`);
 
+  //@q same as before but we can receive 3 images
+  //@q we initiate an image array property in our req.boy
   req.body.images = [];
+
+  //@q returns a single Promise that fulfills when all of the promises passed as an iterable have been fulfilled
+  //@q https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all
+
   await Promise.all(
+    //@q we use map and iterate on our images array
+    //@q we assign a uniq name to each image
     req.files.images.map(async (file, i) => {
       const filename = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
 
+      //@q each image is formated to right format and sent to public/img/tours folder
       await sharp(file.buffer)
         .resize(2000, 1333)
         .toFormat('jpeg')
         .jpeg({ quality: 90 })
         .toFile(`public/img/tours/${filename}`);
 
+      //@q finally we push our new image name in the images array
+      //@q we use map to generate a new array
       req.body.images.push(filename);
     })
   );
 
   next();
 });
-
-/* upload.single('images'); req.file
-upload.array('images', 5);  req.files */
 
 exports.getAllTours = factory.getAll(Tour);
 exports.getTour = factory.getOne(Tour, { path: 'reviews' });
@@ -67,7 +84,7 @@ exports.updateTour = factory.updateOne(Tour);
 exports.deleteTour = factory.deleteOne(Tour);
 
 // =============================================================================
-//          @o PRE FILLED FIELDS OF A QUERY TO GET TOP 5 TOURS
+//          @a PRE FILLED FIELDS OF A QUERY TO GET TOP 5 TOURS
 // =============================================================================
 
 exports.aliasTopTours = (req, res, next) => {
@@ -78,7 +95,7 @@ exports.aliasTopTours = (req, res, next) => {
 };
 
 // =============================================================================
-//    @o FUNCTION ALLOWING TO USE AN COLLECTION AGGREGATION METHD OF MONGODB
+//    @a FUNCTION ALLOWING TO USE AN COLLECTION AGGREGATION METHD OF MONGODB
 // =============================================================================
 
 exports.getTourStats = catchAsyncErr(async (req, res, next) => {
@@ -110,7 +127,7 @@ exports.getTourStats = catchAsyncErr(async (req, res, next) => {
 });
 
 // =============================================================================
-//    @o GEOSPATIAL FUNCTIONS
+//    @a GEOSPATIAL FUNCTIONS
 // =============================================================================
 // 34.241828, -118.481800
 

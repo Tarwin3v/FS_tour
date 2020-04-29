@@ -2,6 +2,7 @@ const express = require('express');
 const reviewsCtrl = require('./../controllers/reviewsCtrl');
 const authCtrl = require('../controllers/authCtrl');
 
+//@q merge params sent by tour router // http://expressjs.com/fr/api.html#express.router
 const router = express.Router({ mergeParams: true });
 
 router.use(authCtrl.protect);

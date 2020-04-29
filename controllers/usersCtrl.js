@@ -5,15 +5,9 @@ const factory = require('./handlerFactory.js');
 const catchAsyncErr = require('./../utils/catchAsyncErr');
 const AppError = require('../utils/appError');
 
-/* const multerStorage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    callback(null, 'public/img/users');
-  },
-  filename: (req, file, callback) => {
-    const ext = file.mimetype.split('/')[1];
-    callback(null, `user-${req.user.id}-${Date.now()}.${ext}`);
-  }
-}); */
+// =============================================================================
+//                         @a MULTER / SHARP
+// =============================================================================
 
 const multerStorage = multer.memoryStorage();
 
@@ -55,27 +49,32 @@ exports.updateUser = factory.updateOne(User);
 exports.deleteUser = factory.deleteOne(User);
 
 // =============================================================================
-//                        @o FILTERED OBJ
+//                        @a FILTERED OBJ
 // =============================================================================
 
 const filterObj = (obj, ...allowedFields) => {
+  //@q empty obj that we will return
   const newObj = {};
+  //@q we iterate on the array returned by Object.keys(obj)
   Object.keys(obj).forEach(el => {
+    //@q if our el is present in our allowed fields we put it in our new object
     if (allowedFields.includes(el)) newObj[el] = obj[el];
   });
+
   return newObj;
 };
 
 exports.getMe = (req, res, next) => {
+  //@q to be able to use getOne in factory
   req.params.id = req.user.id;
   next();
 };
 // =============================================================================
-//                            @o UPDATE USER
+//                            @a UPDATE USER
 // =============================================================================
 
 exports.updateMe = catchAsyncErr(async (req, res, next) => {
-  // TODO create error if user post password data
+  //@q we handle password update in our authCtrl
   if (req.body.password || req.body.passwordConfirm) {
     return next(
       new AppError(
@@ -84,19 +83,20 @@ exports.updateMe = catchAsyncErr(async (req, res, next) => {
       )
     );
   }
-  // TODO filtered out unwanted update fields
+  //@q we filter our req.body object to get only the name && email fields
 
   const filteredBody = filterObj(req.body, 'name', 'email');
+
+  //@q if we have a file in our req we append a photo property to our filteredBody object
   if (req.file) filteredBody.photo = req.file.filename;
 
-  // TODO update user document
+  //@d we query our user in db with his id && send filteredBody object to db
 
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
     runValidators: true
   });
 
-  console.log(updatedUser);
   res.status(200).json({
     status: 'success',
     data: {
@@ -106,7 +106,7 @@ exports.updateMe = catchAsyncErr(async (req, res, next) => {
 });
 
 // =============================================================================
-//                         @o DELETE USER
+//                         @a DELETE USER
 // =============================================================================
 
 exports.deleteMe = catchAsyncErr(async (req, res, next) => {
