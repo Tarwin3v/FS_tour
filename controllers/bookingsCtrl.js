@@ -5,11 +5,10 @@ const Booking = require('./../models/bookingsModel');
 const catchAsyncErr = require('./../utils/catchAsyncErr');
 
 exports.getCheckoutSession = catchAsyncErr(async (req, res, next) => {
-  //TODO get the currently booked tour
+  //@d query tour with tourId
   const tour = await Tour.findById(req.params.tourId);
-  console.log(tour);
 
-  //TODO create checkout session
+  //@q create checkout session of stripe
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     success_url: `${req.protocol}://${req.get('host')}/?tour=${
@@ -22,14 +21,14 @@ exports.getCheckoutSession = catchAsyncErr(async (req, res, next) => {
       {
         name: `${tour.name} Tour`,
         description: tour.summary,
-        images: [`https://www.natours.dev/img/tours/${tour.imageCover}`],
+        images: [],
         amount: tour.price * 100,
-        currency: 'usd',
+        currency: 'eu',
         quantity: 1
       }
     ]
   });
-  //TODO create session as response
+  //@q send session to client
   res.status(200).json({
     status: 'success',
     session: session
@@ -37,9 +36,12 @@ exports.getCheckoutSession = catchAsyncErr(async (req, res, next) => {
 });
 
 exports.createBookingCheckout = catchAsyncErr(async (req, res, next) => {
+  //@q deconstruct our data from req.query
   const { tour, user, price } = req.query;
+  //@q check exist state
   if (!tour && !user && !price) return next();
+  //@q persist the data in db
   await Booking.create({ tour, user, price });
-
+  //@q remove params from the query and redirect to the originalUrl // https://expressjs.com/fr/api.html#req
   res.redirect(req.originalUrl.split('?')[0]);
 });
