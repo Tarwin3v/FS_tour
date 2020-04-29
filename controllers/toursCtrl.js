@@ -113,6 +113,7 @@ exports.getTourStats = catchAsyncErr(async (req, res, next) => {
 //    @o GEOSPATIAL FUNCTIONS
 // =============================================================================
 // 34.241828, -118.481800
+
 exports.getToursWithin = catchAsyncErr(async (req, res, next) => {
   const { distance, latlng, unit } = req.params;
   const [lat, lng] = latlng.split(',');

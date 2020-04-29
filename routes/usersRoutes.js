@@ -11,7 +11,7 @@ router.get('/logout', authCtrl.logOut);
 router.post('/forgotPassword', authCtrl.forgotPassword);
 router.patch('/resetPassword/:token', authCtrl.resetPassword);
 
-//@o Logged in Users
+//@q Logged in Users
 router.use(authCtrl.protect);
 
 router.patch('/updateMyPassword', authCtrl.updatePassword);
@@ -24,7 +24,7 @@ router.patch(
 );
 router.delete('/deleteMe', usersCtrl.deleteMe);
 
-//@o Admin access
+//@q Admin access
 router.use(authCtrl.restrictTo('admin'));
 
 router.route('/').get(usersCtrl.getAllUsers);
