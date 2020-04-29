@@ -52,10 +52,6 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// =============================================================================================================
-// @MIDDLEWARES
-// =============================================================================================================
-
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next(); //https://mongoosejs.com/docs/api/document.html
 
@@ -76,9 +72,6 @@ userSchema.pre(/^find/, function(next) {
   this.find({ active: { $ne: false } });
   next();
 });
-// =============================================================================================================
-// @METHODS
-// =============================================================================================================
 
 userSchema.methods.correctPassword = async function(
   candidatePassword,

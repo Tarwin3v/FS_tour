@@ -25,6 +25,7 @@ const bookingSchema = new mongoose.Schema({
   }
 });
 
+//@q pre middleware triggered on find queries , populate user && tour name
 bookingSchema.pre(/^find/, function(next) {
   this.populate('user').populate({ path: 'tour', select: 'name' });
   next();
